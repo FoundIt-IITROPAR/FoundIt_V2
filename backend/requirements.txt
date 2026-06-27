@@ -1,0 +1,10 @@
+minio
+redis
+fastapi
+uvicorn
+pymongo
+pydantic
+python-dotenv
+motor
+PIL
+
