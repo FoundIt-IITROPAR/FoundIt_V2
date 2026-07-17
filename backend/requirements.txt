@@ -5,6 +5,6 @@ uvicorn
 pymongo
 pydantic
 python-dotenv
-motor
-PIL
-
+qdrant-client
+pillow
+smtplib
