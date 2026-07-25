@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FoundIt
 
-## Getting Started
+A lost & found community platform built with Next.js 14 (App Router), TypeScript, and Tailwind CSS.
 
-First, run the development server:
+## Features included
+
+- **Landing page** with live stats and a "how it works" section
+- **Login / Signup** (mock auth, persisted to `localStorage`)
+- **Lost items** and **Found items** listing pages with search + category filters
+- **Report page** with two columns — report a lost item / report a found item
+- **Item detail page** — full report view, "message reporter", "mark as resolved" (+50 karma)
+- **Karma page** — points balance, badges, history, and a community leaderboard
+- **Chat page** — per-item conversation threads with a live message composer
+- **Dashboard** — personal summary of karma, open reports, and resolved items
+
+All data (users, items, karma, chat) is currently mocked and stored in the browser via `localStorage`
+through `context/AppContext.tsx`, so the app is fully clickable without a backend. To go to
+production, swap the functions inside `AppContext.tsx` (`login`, `signup`, `addItem`, `sendMessage`, etc.)
+for real API calls to your backend/database (e.g. Postgres + Prisma, Supabase, or Firebase), and move
+password handling to a real auth provider — never store plaintext passwords as this demo does.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Demo login: `priya@example.com` / `password123`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure
 
-## Learn More
+```
+app/
+  page.tsx                → landing page
+  login/page.tsx          → login
+  signup/page.tsx         → signup
+  lost-items/page.tsx     → lost items list (+ shared Filters/EmptyState)
+  found-items/page.tsx    → found items list
+  report/page.tsx         → two-column report form
+  item/[id]/page.tsx      → item detail, messaging, resolve
+  karma/page.tsx          → karma points, badges, leaderboard
+  chat/page.tsx           → conversations + message thread
+  dashboard/page.tsx      → personal summary
+components/               → Navbar, Footer, ItemCard, badges
+context/AppContext.tsx    → mock backend (auth, items, chat, karma) via localStorage
+lib/types.ts              → shared TypeScript types
+lib/mockData.ts           → seed data
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Suggested next steps
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Replace the mock `AppContext` with real API routes / a database
+- Add image upload for item photos (currently emoji placeholders)
+- Add push/email notifications when a possible match is found
+- Add admin moderation tools for flagged reports
