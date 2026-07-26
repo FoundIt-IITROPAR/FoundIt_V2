@@ -16,7 +16,6 @@ def insert_vector(vector, metadata):
         ]
     )
 
-
 def delete_vector(vector, metadata):
 
     client.delete(
@@ -26,18 +25,18 @@ def delete_vector(vector, metadata):
         )
     )
 
-def search_similar(vector,metadata):
+def search_similar(metadata):
 
-    category = "lost" if metadata["category"] == "found" else "found"
+    typeof = "lost" if metadata["typeof"] == "found" else "found"
 
     response = client.query_points(
         collection_name="image_embeddings",
-        query=vector,
+        query=metadata["vec"],
         limit=5,
         query_filter=models.Filter(
             must=[
                 models.FieldCondition(
-                    key="category",match=models.MatchValue(value=category)
+                    key="typeof",match=models.MatchValue(value=typeof)
                 )
             ]
         ),
