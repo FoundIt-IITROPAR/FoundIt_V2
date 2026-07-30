@@ -1,10 +1,11 @@
 from minio import Minio
 from dotenv import load_dotenv
 import os
-load_dotenv()
+import io
+load_dotenv("../../.env")
 
-user = os.environ.get("MINIO_USER")
-password = os.environ.get("MINIO_PASSWORD")
+user = os.environ.get("MINIO_USER","minioadmin")
+password = os.environ.get("MINIO_PASSWORD","miniopassword")
 
 client = Minio(
     "minio:9000",
@@ -13,16 +14,27 @@ client = Minio(
     secure=False
 )
 
-def upload_image(file,metadata):
-    client.append_object(
-        bucket_name="Images",
-        object_name=metadata["id"],
-        data=file
+def upload_image(file,metadata,image_type="image/jpeg"):
+    image_bytes = io.BytesIO(file)
+    image_name = metadata["name"]
+    size = len(file)
+    _ ,ext = image_type.split("/")
+    if ext == "jpeg":
+        ext = "jpg"
+
+    object_name = f"{image_name}.{ext}"
+
+    client.put_object(
+        bucket_name="images",
+        object_name=object_name,
+        data=image_bytes,
+        length=size,
+        content_type=image_type
     )
-    return f"https://foundit.com/Images/{metadata["id"]}"
+    return f"https://localhost:9000/images/{image_name}.jpg"
 
 def delete_image(metadata):
     client.remove_object(
-        bucket_name="Images",
-        object_name=metadata["id"]
+        bucket_name="images",
+        object_name=metadata["name"]
     )

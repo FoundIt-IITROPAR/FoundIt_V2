@@ -2,9 +2,9 @@ from fastapi import FastAPI, Response, Request, UploadFile, Form, File, Backgrou
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime, timedelta, UTC
-from tools import otp
-from database import users, messages, items
-from image import storage, vector
+from app.tools import otp
+from app.database import users, messages, items
+from app.image import storage, vector
 from app.startup.init_qdrant import create_collection, check_collection_exists
 from app.startup.init_minio import create_bucket, check_bucket_exists
 import redis 
@@ -102,7 +102,10 @@ def additem(background_tasks: BackgroundTasks,
             tmp.flush()
             vec = vectormodel.get_embedding(tmp.name)
 
-        image_url = storage.upload_image(image)
+        image_store = image.read()
+        size = len(image_store)
+        metadata={"name": name + userid}
+        image_url = storage.upload_image(image_store,metadata,size)
 
         items.add_item(
             name=name, description=description, category=category, image_url=image_url,
@@ -227,22 +230,6 @@ def get_karma(collegeid: str):
         return {"success": True, "karma": karma}
     except Exception as e:
         return {"success": False, "karma": 0}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @app.get("/miniocheck")
 def minio_check():
