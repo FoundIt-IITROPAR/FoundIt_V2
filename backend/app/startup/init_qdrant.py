@@ -9,7 +9,7 @@ def create_collection():
     else:
         client.create_collection(
             collection_name="image_embeddings",
-            vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE)
+            vectors_config=models.VectorParams(size=768, distance=models.Distance.COSINE)
         )
 
 def check_collection_exists():

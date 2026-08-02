@@ -2,12 +2,14 @@ from fastapi import FastAPI, Response, Request, UploadFile, Form, File, Backgrou
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime, timedelta, UTC
+from bson import ObjectId
 from app.tools import otp
 from app.database import users, messages, items
 from app.image import storage, vector
 from app.startup.init_qdrant import create_collection, check_collection_exists
 from app.startup.init_minio import create_bucket, check_bucket_exists
 import redis 
+import os
 
 create_collection()
 create_bucket()
@@ -40,14 +42,14 @@ def signup(body: Signup, response: Response):
 
     return "OTP Sent"
 
-@app.post("signup/verify")
+@app.post("/signup/verify")
 def verify(body: Signup, response: Response):
     cached_otp = cache.get(body.collegeid)
     if cached_otp is None:
         response.status_code = 400
         return "OTP Expired"
     
-    if cached_otp != body.otp:
+    if str(cached_otp) != str(body.otp):
         response.status_code = 400
         return "Invalid OTP"
 
@@ -61,12 +63,13 @@ def verify(body: Signup, response: Response):
 
 @app.post('/signup/resend')
 def resendotp(body: Signup):
-    if cache.get(body.collegeid) is not None:
-        otp = cache.get(body.collegeid)
+    cached_otp = cache.get(body.collegeid)
+    if cached_otp is not None:
         cache.delete(body.collegeid)
-        cache.set(body.collegeid,otp,exp=300)
-        otp.send_otp(body.email,otp)
-        return "OTP sent"
+        cache.set(body.collegeid, cached_otp, ex=300)
+        otp.send_otp(body.email, int(cached_otp))
+        return {"success": True, "message": "OTP sent"}
+    return {"success": False, "message": "No OTP to resend"}
 
 @app.post("/login")
 def login(body: Login, response: Response):
@@ -88,21 +91,25 @@ def run_ai_matching(metadata):
         print(e)
 
 @app.post('/additem')
-def additem(background_tasks: BackgroundTasks,
+async def additem(background_tasks: BackgroundTasks,
             name: str = Form(), description: str = Form(), category: str = Form(),
             image: UploadFile = File(), type: str = Form(), location: str = Form(),
             date: str = Form(), userid: str = Form(), usercollegeid: str = Form(),
             usermail: str = Form(), userphone: str = Form(''), status: str = Form()):
     try:
-        from ml import vectormodel
-        import tempfile
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
-            contents = image.file.read()
-            tmp.write(contents)
-            tmp.flush()
-            vec = vectormodel.get_embedding(tmp.name)
+        embedder_url = os.environ["EMBEDDER_URL"]
+        import httpx
+        image_bytes = await image.read()
+        async with httpx.AsyncClient() as client:  
+            response = await client.post(
+                f'{embedder_url}/embed/image',
+                files={
+                    'file': (image.filename, image_bytes, image.content_type)
+                }
+            )
+        vector = response.json()['vector']
 
-        image_store = image.read()
+        image_store = image_bytes
         size = len(image_store)
         metadata={"name": name + userid}
         image_url = storage.upload_image(image_store,metadata,size)
@@ -110,10 +117,10 @@ def additem(background_tasks: BackgroundTasks,
         items.add_item(
             name=name, description=description, category=category, image_url=image_url,
             typeof=type, location=location, lostdate=date, userid=userid,
-            usercollegeid=usercollegeid, usermail=usermail, status=status, vector=vec
+            usercollegeid=usercollegeid, usermail=usermail, status=status, vector=vector
         )
         metadata = {
-            "name":name, "typeof":type, "vec": vec 
+            "name":name, "typeof":type, "vec": vector 
         }
         background_tasks.add_task(run_ai_matching, metadata)
         return {"success": True, "message": "Item posted successfully"}
@@ -133,18 +140,19 @@ def get_all_items():
 @app.get('/items/{item_type}')
 def get_items_by_type(item_type: str):
     try:
-        items = items.get_items_bytype(item_type)
-        for item in items:
+        items_list = items.get_items_bytype(item_type)
+        for item in items_list:
             item['_id'] = str(item['_id'])
-        return {"success": True, "items": items}
+        return {"success": True, "items": items_list}
     except Exception as e:
         return {"success": False, "message": str(e)}
 
 @app.get('/item/{item_id}')
-def get_item(item_id: int):
+def get_item(item_id: str):
     try:
-        item = items.fetch_item({"_id": item_id})
+        item = items.fetch_item({"_id": ObjectId(item_id)})
         if item:
+            item['_id'] = str(item['_id'])
             return {"success": True, "item": item}
         else:
             return {"success": False, "message": "Item not found"}
