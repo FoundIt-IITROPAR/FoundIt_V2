@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} font-body bg-paper text-ink antialiased`}>
+      <body className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} font-body bg-transparent text-ink antialiased`}>
         <AppProvider>
           <div className="flex min-h-screen flex-col">
             <Navbar />

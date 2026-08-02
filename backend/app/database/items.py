@@ -32,11 +32,11 @@ def get_items():
     ))
     return items
 
-def get_item_bytype(item_type):
+def get_items_bytype(item_type):
     items = items.find(
-        ({"type": item_type,"status":"active"}).sort("date",-1).limit(50) 
-    )
-    return items
+        {"type": item_type, "status": "active"}
+    ).sort("date", -1).limit(50)
+    return list(items)
 
 def get_user_items(userid):
     items = list(items.find(

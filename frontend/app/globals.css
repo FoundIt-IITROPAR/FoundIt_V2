@@ -8,26 +8,35 @@
 
 html,
 body {
-  background-color: #f6f3ec;
-  color: #1e2a38;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(184, 194, 211, 0.12), transparent 18%),
+    radial-gradient(circle at 82% 16%, rgba(184, 194, 211, 0.08), transparent 22%),
+    linear-gradient(180deg, #070b15 0%, #09101d 55%, #0d1225 100%);
+  color: #f9f8f4;
 }
 
 * {
   scroll-behavior: smooth;
 }
 
+::selection {
+  background: rgba(184, 194, 211, 0.18);
+  color: #070b15;
+}
+
 :focus-visible {
-  outline: 2px solid #1e2a38;
+  outline: 2px solid #f9f8f4;
   outline-offset: 2px;
 }
 
 /* Claim-tag card: a torn/perforated ticket stub, the site's signature motif */
 .claim-tag {
   position: relative;
-  background: #fffdf8;
-  border: 1px solid #dcd5c4;
-  border-radius: 6px;
-  box-shadow: 0 1px 0 rgba(30, 42, 56, 0.04);
+  background: linear-gradient(135deg, #101a30 0%, #091120 100%);
+  border: 1px solid #1e2f4f;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
 }
 
 .claim-tag::before {
@@ -39,12 +48,12 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #f6f3ec;
-  border: 1px solid #dcd5c4;
+  background: #070b15;
+  border: 1px solid #1e2f4f;
 }
 
 .perf-edge {
-  background-image: radial-gradient(circle, rgba(30, 42, 56, 0.16) 1.4px, transparent 1.4px);
+  background-image: radial-gradient(circle, rgba(249, 248, 244, 0.12) 1.4px, transparent 1.4px);
   background-size: 10px 10px;
   height: 10px;
 }
@@ -54,6 +63,7 @@ body {
   border-radius: 9999px;
   transform: rotate(-6deg);
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   * {

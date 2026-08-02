@@ -27,7 +27,7 @@ def fetch_user(doc):
 
 def change_password(collegeid, password_hash):
     users.update_one(
-        {"college_id":collegeid},
+        {"collegeid": collegeid},
         {"$set":{
             "password_hash": password_hash
         }}

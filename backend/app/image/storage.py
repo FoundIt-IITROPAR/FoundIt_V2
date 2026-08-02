@@ -31,7 +31,7 @@ def upload_image(file,metadata,image_type="image/jpeg"):
         length=size,
         content_type=image_type
     )
-    return f"https://localhost:9000/images/{image_name}.jpg"
+    return f"https://localhost:9000/images/{object_name}"
 
 def delete_image(metadata):
     client.remove_object(

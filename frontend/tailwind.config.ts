@@ -9,25 +9,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: "#F6F3EC",
-        ink: "#1E2A38",
-        "ink-soft": "#48566A",
+        paper: "#070B15",
+        ink: "#F9F8F4",
+        "ink-soft": "#9DAAC4",
         amber: {
-          DEFAULT: "#E29A3C",
-          dark: "#B9772A",
-          light: "#F4D9A8",
+          DEFAULT: "#B82601",
+          dark: "#8E1C01",
+          light: "#F6C2B5",
         },
         rust: {
-          DEFAULT: "#C1503D",
-          dark: "#9A3E30",
-          light: "#EFC9C0",
+          DEFAULT: "#813772",
+          dark: "#612555",
+          light: "#D6B7D4",
         },
         pine: {
-          DEFAULT: "#3F7D63",
-          dark: "#2E5D49",
-          light: "#CBE3D6",
+          DEFAULT: "#19656F",
+          dark: "#11474F",
+          light: "#B8D8DE",
         },
-        line: "#DCD5C4",
+        line: "#202D43",
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "Georgia", "serif"],
