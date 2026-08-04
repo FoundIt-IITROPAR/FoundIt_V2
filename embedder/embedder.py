@@ -12,7 +12,6 @@ processor = AutoProcessor.from_pretrained("facebook/dinov2-base")
 model = AutoModel.from_pretrained("facebook/dinov2-base").to(device)
 model.eval()
 
-
 @torch.no_grad()
 def embed_image(image_bytes: bytes):
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")

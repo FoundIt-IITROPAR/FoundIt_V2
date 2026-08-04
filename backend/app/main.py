@@ -68,8 +68,8 @@ def resendotp(body: Signup):
         cache.delete(body.collegeid)
         cache.set(body.collegeid, cached_otp, ex=300)
         otp.send_otp(body.email, int(cached_otp))
-        return {"success": True, "message": "OTP sent"}
-    return {"success": False, "message": "No OTP to resend"}
+        return {"status": True, "message": "OTP sent"}
+    return {"status": False, "message": "No OTP to resend"}
 
 @app.post("/login")
 def login(body: Login, response: Response):
@@ -77,11 +77,11 @@ def login(body: Login, response: Response):
     if user_exists and user_exists['password_hash'] == body.password_hash:
         user_data = {k: v for k, v in user_exists.items() if k not in ('password_hash')}
         user_data['_id'] = str(user_data['_id'])
-        return {"success": True, "user": user_data}
+        return {"status": True, "user": user_data}
     elif not user_exists:
-        return {"success": False, "message": "No account found with that email"}
+        return {"status": False, "message": "No account found with that email"}
     else:
-        return {"success": False, "message": "Incorrect password"}
+        return {"status": False, "message": "Incorrect password"}
     
 def run_ai_matching(metadata):
     try:
@@ -123,9 +123,9 @@ async def additem(background_tasks: BackgroundTasks,
             "name":name, "typeof":type, "vec": vector 
         }
         background_tasks.add_task(run_ai_matching, metadata)
-        return {"success": True, "message": "Item posted successfully"}
+        return {"status": True, "message": "Item posted successfully"}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/items')
 def get_all_items():
@@ -133,9 +133,9 @@ def get_all_items():
         items = items.get_items()
         for item in items:
             item['_id'] = str(item['_id'])
-        return {"success": True, "items": items}
+        return {"status": True, "items": items}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/items/{item_type}')
 def get_items_by_type(item_type: str):
@@ -143,9 +143,9 @@ def get_items_by_type(item_type: str):
         items_list = items.get_items_bytype(item_type)
         for item in items_list:
             item['_id'] = str(item['_id'])
-        return {"success": True, "items": items_list}
+        return {"status": True, "items": items_list}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/item/{item_id}')
 def get_item(item_id: str):
@@ -153,11 +153,11 @@ def get_item(item_id: str):
         item = items.fetch_item({"_id": ObjectId(item_id)})
         if item:
             item['_id'] = str(item['_id'])
-            return {"success": True, "item": item}
+            return {"status": True, "item": item}
         else:
-            return {"success": False, "message": "Item not found"}
+            return {"status": False, "message": "Item not found"}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/user/{user_id}')
 def get_user(user_id: str):
@@ -165,20 +165,20 @@ def get_user(user_id: str):
         user = users.fetch_user({"_id": user_id})
         if user:
             user.pop('password_hash', None)
-            return {"success": True, "user": user}
+            return {"status": True, "user": user}
         else:
-            return {"success": False, "message": "User not found"}
+            return {"status": False, "message": "User not found"}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.post('/messages/send')
 def send_message(sender_id: str = Form(), receiver_id: str = Form(),
                 item_id: str = Form(), text: str = Form()):
     try:
         msg_id = messages.add_message(sender_id, receiver_id, item_id, text)
-        return {"success": True, "message_id": msg_id}
+        return {"status": True, "message_id": msg_id}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/messages/{sender_id}/{receiver_id}')
 def get_messages(sender_id: str, receiver_id: str,):
@@ -186,17 +186,17 @@ def get_messages(sender_id: str, receiver_id: str,):
         msgs = messages.get_conversation(sender_id, receiver_id)
         for m in msgs:
             m['_id'] = str(m['_id'])
-        return {"success": True, "messages": msgs}
+        return {"status": True, "messages": msgs}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/conversations/{user_id}')
 def get_conversations(user_id: str):
     try:
         convs = messages.get_user_conversations(user_id)
-        return {"success": True, "conversations": convs}
+        return {"status": True, "conversations": convs}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/debug/user/{email:path}')
 def debug_user(email: str):
@@ -217,9 +217,9 @@ def get_user_items(userid: str):
         items = items.get_user_items(userid)
         for item in items:
             item['_id'] = str(item['_id'])
-        return {"success": True, "items": items}
+        return {"status": True, "items": items}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.post('/items/{item_id}/resolve')
 def resolve_item(item_id: str, status: str = Form()):
@@ -227,17 +227,17 @@ def resolve_item(item_id: str, status: str = Form()):
         response = items.resolve_item(item_id)
         if response.get("success"):
             users.increment_karma(response.get("userid"), 5)
-        return {"success": True}
+        return {"status": True}
     except Exception as e:
-        return {"success": False, "message": str(e)}
+        return {"status": False, "message": str(e)}
 
 @app.get('/karma/{collegeid}')
 def get_karma(collegeid: str):
     try:
         karma = users.get_karma(collegeid)
-        return {"success": True, "karma": karma}
+        return {"status": True, "karma": karma}
     except Exception as e:
-        return {"success": False, "karma": 0}
+        return {"status": False, "karma": 0}
 
 @app.get("/miniocheck")
 def minio_check():

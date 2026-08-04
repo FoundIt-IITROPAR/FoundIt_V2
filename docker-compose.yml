@@ -49,6 +49,7 @@ services:
       HF_HOME: /models
     volumes:
      - models:/models
+     - ./embedder:/test
 
 volumes:
   mongodb_data:
