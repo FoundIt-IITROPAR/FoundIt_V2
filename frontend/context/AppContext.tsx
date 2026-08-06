@@ -16,8 +16,10 @@ import {
   ItemKind,
   KarmaEvent,
 } from "@/lib/types";
+import bcrypt from "bcryptjs";
 
 const STORAGE_KEY = "foundit-state-v1";
+const API_URL = "http://localhost:8000";
 
 interface PersistedState {
   users: FoundItUser[];
@@ -30,7 +32,7 @@ interface PersistedState {
 
 interface AppContextValue extends PersistedState {
   currentUser: FoundItUser | null;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
+  login: (collegeid: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signup: (name: string, email: string, password: string) => { ok: boolean; error?: string };
   logout: () => void;
   addItem: (item: Omit<FoundItItem, "id" | "createdAt" | "reporterId" | "reporterName" | "status">) => void;
@@ -82,13 +84,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const currentUser = state.users.find((u) => u.id === state.currentUserId) || null;
 
-  function login(email: string, password: string) {
-    const user = state.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) return { ok: false, error: "No account found with that email." };
-    if (user.password !== password) return { ok: false, error: "Incorrect password." };
-    setState((s) => ({ ...s, currentUserId: user.id }));
-    return { ok: true };
-  }
+  async function login(collegeid: string, password: string) {
+    const passwordHash = await bcrypt.hash(password, 12);
+    const response = await fetch(`${API_URL}/login`,{
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ collegeid, passwordHash })
+  });
+
+    const data = await response.json();
+
+    if (data["status"]) {
+      setState((s) => ({...s, currentUserId: data["_id"] }));
+      return {ok: true};
+    }
+    else if (!data["status"]) {
+      return {ok : false, error: data["message"]};
+    }}
 
   function signup(name: string, email: string, password: string) {
     if (state.users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {

@@ -15,13 +15,12 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-5 pt-14 pb-10">
         <div className="claim-tag relative overflow-hidden px-6 py-10 md:px-14 md:py-16">
           <div className="perf-edge absolute left-0 right-0 top-0" />
-          <p className="font-tag text-xs uppercase tracking-[0.2em] text-ink-soft">Claim Ticket No. 000-FOUNDIT</p>
           <h1 className="mt-4 max-w-2xl font-display text-4xl font-semibold leading-tight text-ink md:text-5xl">
             Lost something? <span className="italic text-rust">Found</span> something?
             <br /> Let's get it back where it belongs.
           </h1>
           <p className="mt-4 max-w-xl text-base text-ink-soft md:text-lg">
-            FoundIt is the community claim desk for your campus or neighborhood — report what's missing,
+            FoundIt is the community claim desk for your campus or neighborhood report what's missing,
             log what you've picked up, and chat directly to arrange the handoff.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">

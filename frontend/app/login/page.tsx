@@ -8,13 +8,13 @@ import { useApp } from "@/context/AppContext";
 export default function LoginPage() {
   const { login } = useApp();
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [collegeid, setCollegeid] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const result = login(email, password);
+    const result = login(collegeid, password);
     if (!result.ok) {
       setError(result.error || "Something went wrong.");
       return;
@@ -35,14 +35,14 @@ export default function LoginPage() {
           <p className="rounded-tag bg-rust-light px-3 py-2 text-sm text-rust-dark">{error}</p>
         )}
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-          Email
+          College ID
           <input
-            type="email"
+            type="collegeid"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={collegeid}
+            onChange={(e) => setCollegeid(e.target.value)}
             className="rounded-tag border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-ink"
-            placeholder="you@example.com"
+            placeholder=""
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
@@ -53,7 +53,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-tag border border-line bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-ink"
-            placeholder="••••••••"
+            placeholder=""
           />
         </label>
         <button type="submit" className="mt-2 rounded-tag bg-ink px-4 py-2.5 font-medium text-paper transition-colors hover:bg-ink/90">
