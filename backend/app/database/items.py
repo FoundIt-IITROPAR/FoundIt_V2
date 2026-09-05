@@ -27,22 +27,15 @@ def delete_item(doc):
     items.delete_one(doc)
 
 def get_items():
-    items = list(items.find(
-        ({"status":"active"}).sort("date",-1).limit(50)
-    ))
-    return items
+    return list(items.find({"status": {"$in": ["active", "open"]}}).sort("date", -1).limit(50))
 
 def get_items_bytype(item_type):
-    items = items.find(
-        {"type": item_type, "status": "active"}
-    ).sort("date", -1).limit(50)
-    return list(items)
+    return list(items.find(
+        {"type": item_type, "status": {"$in": ["active", "open"]}}
+    ).sort("date", -1).limit(50))
 
 def get_user_items(userid):
-    items = list(items.find(
-        {"userid":userid}.sort("date",-1)
-    ))
-    return items
+    return list(items.find({"userid": userid}).sort("date", -1))
 
 def resolve_item(item_id):
 

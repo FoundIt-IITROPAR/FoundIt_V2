@@ -12,9 +12,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const result = login(collegeid, password);
+    const result = await login(collegeid, password);
     if (!result.ok) {
       setError(result.error || "Something went wrong.");
       return;

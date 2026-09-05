@@ -47,10 +47,10 @@ function ChatPageInner() {
   const activeThread = threads.find((t) => t.id === activeThreadId) || null;
   const messages = activeThread ? messagesForThread(activeThread.id) : [];
 
-  function handleSend(e: FormEvent) {
+  async function handleSend(e: FormEvent) {
     e.preventDefault();
     if (!activeThread || !draft.trim()) return;
-    sendMessage(activeThread.id, draft);
+    await sendMessage(activeThread.id, draft);
     setDraft("");
   }
 

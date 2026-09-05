@@ -13,13 +13,13 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 6) {
       setError("Password should be at least 6 characters.");
       return;
     }
-    const result = signup(name, email, password);
+    const result = await signup(name, email, password);
     if (!result.ok) {
       setError(result.error || "Something went wrong.");
       return;

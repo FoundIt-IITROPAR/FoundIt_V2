@@ -5,7 +5,7 @@ export interface FoundItUser {
   id: string;
   name: string;
   email: string;
-  password: string; // demo only — never store plaintext in a real backend
+  password?: string;
   karma: number;
   joined: string; // ISO date
 }

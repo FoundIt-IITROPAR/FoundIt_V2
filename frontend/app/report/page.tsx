@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { CATEGORIES } from "@/lib/mockData";
+import { CATEGORIES } from "@/lib/constants";
 import { ItemKind } from "@/lib/types";
 
 interface FormState {
@@ -89,7 +89,7 @@ function ReportColumn({
   accent: "rust" | "pine";
   heading: string;
   sub: string;
-  onSubmit: (form: FormState) => void;
+  onSubmit: (form: FormState) => void | Promise<void>;
   disabled: boolean;
 }) {
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -102,9 +102,9 @@ function ReportColumn({
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onSubmit(form);
+    await onSubmit(form);
     setForm({ ...emptyForm, date: new Date().toISOString().slice(0, 10) });
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 3000);

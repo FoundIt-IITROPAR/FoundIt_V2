@@ -10,6 +10,7 @@ from app.startup.init_qdrant import create_collection, check_collection_exists
 from app.startup.init_minio import create_bucket, check_bucket_exists
 import redis 
 import os
+import bcrypt
 
 create_collection()
 create_bucket()
@@ -34,6 +35,23 @@ class Signup(BaseModel):
     password_hash: str
     email: str
     otp: int | None = None
+
+class DirectSignup(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class ItemCreate(BaseModel):
+    name: str
+    description: str
+    category: str
+    type: str
+    location: str
+    date: str
+    userid: str
+    usercollegeid: str
+    usermail: str
+    image_url: str | None = None
 
 @app.post("/signup/start")
 def signup(body: Signup, response: Response):
@@ -73,15 +91,35 @@ def resendotp(body: Signup):
 
 @app.post("/login")
 def login(body: Login, response: Response):
-    user_exists = users.fetch_user({'collegeid': body.collegeid})
-    if user_exists and user_exists['password_hash'] == body.password_hash:
-        user_data = {k: v for k, v in user_exists.items() if k not in ('password_hash')}
-        user_data['_id'] = str(user_data['_id'])
+    user_exists = users.fetch_user({'$or': [{'collegeid': body.collegeid}, {'email': body.collegeid}]})
+    if user_exists and bcrypt.checkpw(body.password.encode('utf-8'), user_exists['password_hash'].encode('utf-8')):
+        user_data = {k: v for k, v in user_exists.items() if k not in ('password_hash', '_id')}
+        user_data['_id'] = str(user_exists['_id'])
         return {"status": True, "user": user_data}
     elif not user_exists:
         return {"status": False, "message": "No account found with that email"}
     else:
         return {"status": False, "message": "Incorrect password"}
+
+@app.post('/signup/direct')
+def direct_signup(body: DirectSignup, response: Response):
+    if users.fetch_user({'email': body.email}):
+        response.status_code = 409
+        return {"status": False, "message": "An account with that email already exists."}
+    password_hash = bcrypt.hashpw(body.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    users.add_user(body.email, body.email, password_hash, True, body.name)
+    users.add_karma_event(body.email, 10, "Welcome bonus for joining FoundIt")
+    user = users.fetch_user({'email': body.email})
+    return {"status": True, "user": {**{k: v for k, v in user.items() if k not in ('password_hash', '_id')},
+                                      '_id': str(user['_id'])}}
+
+@app.get('/users')
+def get_users():
+    result = []
+    for user in users.users.find({}, {'password_hash': 0}):
+        user['_id'] = str(user['_id'])
+        result.append(user)
+    return {"status": True, "users": result}
     
 def run_ai_matching(metadata):
     try:
@@ -127,6 +165,20 @@ async def additem(background_tasks: BackgroundTasks,
     except Exception as e:
         return {"status": False, "message": str(e)}
 
+@app.post('/items')
+def create_item(body: ItemCreate):
+    try:
+        item_id = items.add_item(body.name, body.description, body.category, body.image_url,
+                                 body.type, body.location, body.date, body.userid,
+                                 body.usercollegeid, body.usermail, 'open', [])
+        users.add_karma_event(body.usercollegeid, 15 if body.type == 'found' else 5,
+                              'Reported a found item promptly' if body.type == 'found' else 'Reported a lost item')
+        item = items.fetch_item({'_id': ObjectId(item_id)})
+        item['_id'] = item_id
+        return {"status": True, "item": item}
+    except Exception as e:
+        return {"status": False, "message": str(e)}
+
 @app.get('/items')
 def get_all_items():
     try:
@@ -162,7 +214,7 @@ def get_item(item_id: str):
 @app.get('/user/{user_id}')
 def get_user(user_id: str):
     try:
-        user = users.fetch_user({"_id": user_id})
+        user = users.fetch_user({"$or": [{"_id": user_id}, {"collegeid": user_id}, {"email": user_id}]})
         if user:
             user.pop('password_hash', None)
             return {"status": True, "user": user}
@@ -181,9 +233,11 @@ def send_message(sender_id: str = Form(), receiver_id: str = Form(),
         return {"status": False, "message": str(e)}
 
 @app.get('/messages/{sender_id}/{receiver_id}')
-def get_messages(sender_id: str, receiver_id: str,):
+def get_messages(sender_id: str, receiver_id: str, item_id: str | None = None):
     try:
         msgs = messages.get_conversation(sender_id, receiver_id)
+        if item_id:
+            msgs = [message for message in msgs if message.get('item_id') == item_id]
         for m in msgs:
             m['_id'] = str(m['_id'])
         return {"status": True, "messages": msgs}
@@ -194,6 +248,11 @@ def get_messages(sender_id: str, receiver_id: str,):
 def get_conversations(user_id: str):
     try:
         convs = messages.get_user_conversations(user_id)
+        for conversation in convs:
+            other = users.fetch_user({'_id': conversation['other_user_id']})
+            item = items.fetch_item({'_id': ObjectId(conversation['item_id'])})
+            conversation['other_user_name'] = (other or {}).get('name') or (other or {}).get('email') or conversation['other_user_id']
+            conversation['item_title'] = (item or {}).get('item_name', 'Item conversation')
         return {"status": True, "conversations": convs}
     except Exception as e:
         return {"status": False, "message": str(e)}
@@ -226,7 +285,7 @@ def resolve_item(item_id: str, status: str = Form()):
     try:
         response = items.resolve_item(item_id)
         if response.get("success"):
-            users.increment_karma(response.get("userid"), 5)
+            users.add_karma_event(response.get("userid"), 50, "Helped reunite an item with its owner")
         return {"status": True}
     except Exception as e:
         return {"status": False, "message": str(e)}
@@ -235,7 +294,10 @@ def resolve_item(item_id: str, status: str = Form()):
 def get_karma(collegeid: str):
     try:
         karma = users.get_karma(collegeid)
-        return {"status": True, "karma": karma}
+        events = users.get_karma_events(collegeid)
+        for event in events:
+            event['_id'] = str(event['_id'])
+        return {"status": True, "karma": karma, "events": events}
     except Exception as e:
         return {"status": False, "karma": 0}
 

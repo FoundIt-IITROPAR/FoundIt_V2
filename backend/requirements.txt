@@ -9,3 +9,4 @@ qdrant-client
 pillow
 python-multipart
 httpx
+bcrypt

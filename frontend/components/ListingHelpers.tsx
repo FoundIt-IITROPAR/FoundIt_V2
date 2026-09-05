@@ -1,4 +1,4 @@
-import { CATEGORIES } from "@/lib/mockData";
+import { CATEGORIES } from "@/lib/constants";
 
 export function Filters({
   query,
